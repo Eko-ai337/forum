@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<title>Deneyap Kart - Genel Tartışma Forumu</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root[data-theme="dark"] {
+    --bg:#0f1220;--panel:#171b2e;--panel2:#1e2340;--border:#2a2f4a;
+    --text:#e8e9f3;--muted:#9096b5;--accent:#6c8bff;--accent2:#8f6cff;
+    --danger:#ff6c6c;--success:#5fd9a0;
+  }
+  :root[data-theme="light"] {
+    --bg:#f4f5f9;--panel:#ffffff;--panel2:#f0f2f8;--border:#dcdfe6;
+    --text:#1a1d2c;--muted:#727793;--accent:#6c8bff;--accent2:#8f6cff;
+    --danger:#e74c3c;--success:#2ecc71;
+  }
+  *{box-sizing:border-box;transition: background 0.2s, color 0.2s, border-color 0.2s;}
+  body{margin:0;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:24px;}
+  .wrap{max-width:800px;margin:0 auto;}
+  
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;background:var(--panel);padding:15px;border-radius:14px;border:1px solid var(--border);}
+  .logo-area{display:flex;align-items:center;gap:15px;}
+  .logo-text h1{font-size:20px;margin:0;letter-spacing:.5px;color:var(--text);}
+  .logo-text p{font-size:11px;margin:2px 0 0;color:var(--accent);font-weight:bold;}
+  
+  .controls{display:flex;gap:10px;align-items:center;}
+  .theme-btn{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;cursor:pointer;font-size:13px;}
+  .tag{font-size:11px;color:var(--muted);border:1px solid var(--border);padding:4px 8px;border-radius:20px;}
+  
+  .site-switcher{display:flex;background:var(--panel2);padding:6px;border-radius:10px;border:1px solid var(--border);margin-bottom:20px;gap:6px;}
+  .site-btn{flex:1;text-align:center;padding:10px;border-radius:8px;font-size:13px;text-decoration:none;font-weight:600;}
+  .site-btn.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
+  .site-btn.passive{background:transparent;color:var(--muted);border:1px solid transparent;}
+  .site-btn.passive:hover{border-color:var(--border);color:var(--text);}
+
+  nav{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+  nav button{background:var(--panel);border:1px solid var(--border);color:var(--muted);padding:9px 16px;border-radius:10px;cursor:pointer;font-size:13px;}
+  nav button.active{background:var(--panel2);color:var(--text);border-color:var(--accent);}
+
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px;}
+  .panel h2{margin-top:0;font-size:17px;}
+  label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px;}
+  input[type=text],input[type=password],textarea{width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;}
+  textarea{resize:vertical;min-height:90px;}
+  
+  .checkrow{display:flex;align-items:center;gap:8px;margin-top:14px;}
+  .checkrow input{width:16px;height:16px;margin:0;}
+  .checkrow label{margin:0;cursor:pointer;}
+  
+  button.btn{margin-top:16px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;padding:11px 18px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:600;}
+  
+  .msg{margin-top:12px;font-size:13px;padding:10px 12px;border-radius:8px;display:none;}
+  .msg.error{background:rgba(255,108,108,.12);color:var(--danger);display:block;}
+  .msg.success{background:rgba(95,217,160,.12);color:var(--success);display:block;}
+  .hidden{display:none !important;}
+  
+  .forum-post{border:1px solid var(--border);background:var(--panel);border-radius:12px;padding:18px;margin-bottom:16px;position:relative;}
+  .forum-post h3{margin:0 0 8px 0;font-size:16px;}
+  .forum-post p{font-size:14px;color:var(--text);line-height:1.5;margin:0 0 12px 0;white-space:pre-wrap;}
+  .forum-post .meta{font-size:11px;color:var(--muted);display:flex;gap:12px;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:12px;}
+  
+  .replies-box{background:var(--panel2);padding:12px;border-radius:8px;border:1px solid var(--border);margin-top:10px;}
+  .replies-box h4{margin:0 0 6px 0;font-size:12px;color:var(--muted);}
+  .reply-item{padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between;align-items:center;}
+  .reply-meta{font-size:10px;color:var(--muted);margin-bottom:2px;}
+  
+  .reply-form{display:flex;gap:6px;margin-top:8px;}
+  .reply-form input{margin:0;padding:6px 10px;font-size:13px;}
+
+  .mod-actions{position:absolute;right:18px;top:18px;display:flex;gap:6px;}
+  .mod-btn{background:rgba(255,108,108,0.15);color:var(--danger);border:1px solid var(--danger);padding:4px 8px;border-radius:4px;font-size:11px;cursor:pointer;}
+  .ban-btn{background:rgba(241,196,15,0.15);color:#f1c40f;border:1px solid #f1c40f;}
+
+  .who{display:flex;justify-content:space-between;align-items:center;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:13px;}
+  .who .role{font-size:11px;padding:2px 8px;border-radius:20px;background:rgba(108,139,255,0.15);color:var(--accent);}
+  .who button{background:none;border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;}
+  .empty{color:var(--muted);font-size:13px;text-align:center;padding:30px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="site-switcher">
+    <a href="https://www.deneyapkart.com" class="site-btn passive">📋 www.deneyapkart.com ➔</a>
+    <a href="https://www.deneyapkart.xyz" class="site-btn active">💬 www.deneyapkart.xyz</a>
+  </div>
+
+  <header>
+    <div class="logo-area">
+      <svg width="45" height="45" viewBox="0 0 100 100" style="fill:none; stroke:#6c8bff; stroke-width:4;">
+        <path d="M50 5 L90 20 L90 60 L50 95 L10 60 L10 20 Z" fill="#171b2e"/>
+        <circle cx="35" cy="45" r="4" fill="#6c8bff"/>
+        <circle cx="50" cy="45" r="4" fill="#6c8bff"/>
+        <circle cx="65" cy="45" r="4" fill="#6c8bff"/>
+        <path d="M40 65 L30 75 L45 75" stroke="#6c8bff" stroke-width="3"/>
+      </svg>
+      <div class="logo-text">
+        <h1>DENEYAP KART</h1>
+        <p>GENEL TARTIŞMA FORUMU</p>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="theme-btn" id="themeToggle">☀️ / 🌙</button>
+      <span class="tag" id="statusTag">bağlanılıyor…</span>
+    </div>
+  </header>
+
+  <div id="appArea" class="hidden">
+    <nav id="mainNav">
+      <button data-tab="forum" class="active">💬 Forum Akışı</button>
+      <button data-tab="login">Giriş Yap</button>
+      <button data-tab="signup">Kayıt Ol</button>
+    </nav>
+
+    <div id="whoBar" class="who hidden">
+      <div>Giriş yapan: <strong id="whoName"></strong> <span class="role" id="whoRole"></span></div>
+      <button id="logoutBtn">Çıkış yap</button>
+    </div>
+
+    <div class="panel tab hidden" id="tab-login">
+      <h2>Hesabına Giriş Yap</h2>
+      <label>Kullanıcı adı</label>
+      <input type="text" id="loginUser" placeholder="kullanıcı adı">
+      <label>Şifre</label>
+      <input type="password" id="loginPass" placeholder="şifre">
+      <button class="btn" id="loginBtn">Giriş yap</button>
+      <div class="msg" id="loginMsg"></div>
+    </div>
+
+    <div class="panel tab hidden" id="tab-signup">
+      <h2>Yeni Hesap Oluştur</h2>
+      <label>Kullanıcı adı</label>
+      <input type="text" id="suUser" placeholder="kullanıcı adı">
+      <label>Şifre</label>
+      <input type="password" id="suPass" placeholder="şifre">
+      
+      <div class="checkrow">
+        <input type="checkbox" id="suAdminCheck">
+        <label for="suAdminCheck">Admin yetkisi talep et</label>
+      </div>
+      <div id="suAdminCodeWrap" class="hidden">
+        <label>Yönetici (Admin) Kodu</label>
+        <input type="password" id="suAdminCode" placeholder="Yönetici kodunu girin">
+      </div>
+
+      <button class="btn" id="signupBtn">Hesap oluştur</button>
+      <div class="msg" id="signupMsg"></div>
+    </div>
+
+    <div class="panel tab" id="tab-forum">
+      <div id="newForumBox" class="hidden" style="border: 1px dashed var(--accent); padding:15px; border-radius:10px; margin-bottom:20px;">
+        <h2>💬 Yeni Soru / Konu Aç</h2>
+        <label>Konu Başlığı</label>
+        <input type="text" id="forumTitle" placeholder="Örn: Deneyap Kart Bluetooth bağlantı hatası">
+        <label>Mesajınız</label>
+        <textarea id="forumContent" placeholder="Sorunuzu buraya yazın..."></textarea>
+        <button class="btn" id="forumPostBtn">Yayınla</button>
+        <div class="msg" id="forumMsg"></div>
+      </div>
+
+      <div id="lockedForumNote" class="msg" style="display:block; background:rgba(108,139,255,0.1); color:var(--accent);">
+        ⚠️ Forumda yeni konu açmak veya cevap yazmak için lütfen <strong>giriş yapın</strong>.
+      </div>
+
+      <h2>💬 Güncel Tartışmalar</h2>
+      <div id="forumList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://bppwlyqugapaexnnflrb.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJwcHdseXF1Z2FwYWV4bm5mbHJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MjYxNzIsImV4cCI6MjA5OTAwMjE3Mn0.yKa0V2Q3dykHM44BTr60ibkWBDyavf87Yeb31r8HK1s";
+
+let sb = null;
+let currentUser = null;
+
+const savedUser = localStorage.getItem('dt_user');
+if(savedUser) { currentUser = JSON.parse(savedUser); }
+
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  document.documentElement.setAttribute('data-theme', currentTheme === 'dark' ? 'light' : 'dark');
+});
+
+function showTab(name){
+  document.querySelectorAll('.tab').forEach(el => el.classList.add('hidden'));
+  document.getElementById('tab-'+name).classList.remove('hidden');
+}
+document.querySelectorAll('#mainNav button').forEach(b=> b.addEventListener('click', ()=>showTab(b.dataset.tab)));
+document.getElementById('suAdminCheck').addEventListener('change', (e)=> {
+  document.getElementById('suAdminCodeWrap').classList.toggle('hidden', !e.target.checked);
+});
+
+function flash(elId, text, ok){
+  const el = document.getElementById(elId); el.textContent = text;
+  el.className = 'msg ' + (ok ? 'success' : 'error');
+}
+function escapeHtml(s){
+  if(!s) return "";
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function connectSupabase(){
+  try{
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    document.getElementById('statusTag').textContent = 'bağlı';
+    document.getElementById('appArea').classList.remove('hidden');
+    updateWhoBar();
+
+    sb.channel('public:forum_and_replies')
+      .on('postgres_changes', { event: '*', pattern: 'public', table: 'posts' }, async () => { await refreshForum(); })
+      .on('postgres_changes', { event: '*', pattern: 'public', table: 'comments' }, async () => { await refreshForum(); })
+      .subscribe();
+
+  }catch(e){ document.getElementById('statusTag').textContent = 'hata'; }
+}
+
+async function refreshForum(){
+  let { data: posts } = await sb.from('posts').select('*').order('created_at', {ascending:false});
+  let { data: replies } = await sb.from('comments').select('*').order('created_at', {ascending:true});
+  
+  const list = document.getElementById('forumList');
+  if(!posts) { list.innerHTML = '<div class="empty">Yüklenemedi.</div>'; return; }
+  if(posts.length === 0){ list.innerHTML = '<div class="empty">Henüz hiç konu açılmamış.</div>'; return; }
+
+  const isAdmin = currentUser && currentUser.isAdmin;
+
+  list.innerHTML = posts.map(p => {
+    const postReplies = replies ? replies.filter(r => String(r.post_id) === String(p.id)) : [];
+
+    return `
+      <div class="forum-post">
+        <h3>${escapeHtml(p.title)}</h3>
+        <div class="meta">
+          <span>👤 Paylaşan: <strong>${escapeHtml(p.author)}</strong></span>
+          <span>📅 ${new Date(p.created_at).toLocaleDateString('tr-TR')}</span>
+        </div>
+        <p>${escapeHtml(p.content)}</p>
+        
+        <div class="replies-box">
+          <h4>💬 Cevaplar (${postReplies.length})</h4>
+          <div>
+            ${postReplies.length === 0 ? '<p style="font-size:12px; color:var(--muted); margin:0;">Henüz cevap yok.</p>':''}
+            ${postReplies.map(r => `
+              <div class="reply-item">
+                <div>
+                  <div class="reply-meta"><strong>${escapeHtml(r.author)}</strong> · ${new Date(r.created_at).toLocaleString('tr-TR')}</div>
+                  <div>${escapeHtml(r.content)}</div>
+                </div>
+                ${isAdmin && r.author !== currentUser.username ? `<button class="mod-btn ban-btn" onclick="banUser('${r.author}')">🚫 Banla</button>` : ''}
+              </div>
+            `).join('')}
+          </div>
+          
+          ${currentUser ? `
+            <div class="reply-form">
+              <input type="text" id="reply-in-${p.id}" placeholder="Bir cevap yazın...">
+              <button class="btn" style="padding:6px 12px; font-size:12px; margin:0;" onclick="addReply('${p.id}')">Gönder</button>
+            </div>
+          ` : ''}
+        </div>
+
+        ${isAdmin ? `
+          <div class="mod-actions">
+            ${p.author !== currentUser.username ? `<button class="mod-btn ban-btn" onclick="banUser('${p.author}')">🚫 Banla</button>` : ''}
+            <button class="mod-btn" onclick="deleteForumPost('${p.id}')">🗑️ Sil</button>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+async function banUser(username) {
+  if(!currentUser || !currentUser.isAdmin) return;
+  if(confirm(`${username} isimli kullanıcıyı tamamen banlamak istiyor musunuz?`)) {
+    const { error } = await sb.from('accounts').update({ is_banned: true }).eq('username', username);
+    if(!error) { alert(`${username} engellendi.`); await refreshForum(); }
+  }
+}
+
+async function addReply(postId) {
+  if(!currentUser) return;
+  const { data: userCheck } = await sb.from('accounts').select('is_banned').eq('username', currentUser.username).maybeSingle();
+  if(userCheck && userCheck.is_banned) { alert('Hesabınız engellendiği için cevap yazamazsınız.'); return; }
+
+  const input = document.getElementById(`reply-in-${postId}`);
+  const content = input.value.trim();
+  if(!content) return;
+
+  await sb.from('comments').insert({ post_id: postId, author: currentUser.username, content: content });
+  input.value = '';
+}
+
+async function deleteForumPost(id) {
+  if(!currentUser || !currentUser.isAdmin) return;
+  if(confirm('Bu konuyu silmek istiyor musunuz?')) {
+    const queryId = isNaN(id) ? id : Number(id);
+    await sb.from('posts').delete().eq('id', queryId);
+    await sb.from('comments').delete().eq('post_id', queryId);
+  }
+}
+
+document.getElementById('forumPostBtn').addEventListener('click', async ()=>{
+  if(!currentUser) return;
+  const { data: userCheck } = await sb.from('accounts').select('is_banned').eq('username', currentUser.username).maybeSingle();
+  if(userCheck && userCheck.is_banned) { alert('Hesabınız engellendiği için konu açamazsınız.'); return; }
+
+  const title = document.getElementById('forumTitle').value.trim();
+  const content = document.getElementById('forumContent').value.trim();
+  if(!title || !content) return;
+
+  await sb.from('posts').insert({ title, content, author: currentUser.username });
+  document.getElementById('forumTitle').value = '';
+  document.getElementById('forumContent').value = '';
+});
+
+document.getElementById('signupBtn').addEventListener('click', async ()=>{
+  const username = document.getElementById('suUser').value.trim();
+  const password = document.getElementById('suPass').value;
+  const wantsAdmin = document.getElementById('suAdminCheck').checked;
+  const inputAdminCode = document.getElementById('suAdminCode').value;
+
+  if(!username || !password){ flash('signupMsg', 'Boş alan bırakmayın.', false); return; }
+
+  const { data: existing } = await sb.from('accounts').select('username').eq('username', username).maybeSingle();
+  if(existing){ flash('signupMsg', 'Bu kullanıcı adı alınmış.', false); return; }
+
+  let makeAdmin = false;
+  if(wantsAdmin) {
+    const { data: setting } = await sb.from('admin_settings').select('value').eq('key', 'admin_code').maybeSingle();
+    const dbAdminCode = setting ? setting.value : null;
+
+    if(!dbAdminCode || inputAdminCode !== dbAdminCode) {
+      flash('signupMsg', 'Hatalı veya eksik admin kodu.', false);
+      return;
+    }
+    makeAdmin = true;
+  }
+
+  await sb.from('accounts').insert({ username, password, is_admin: makeAdmin });
+  currentUser = { username, makeAdmin };
+  localStorage.setItem('dt_user', JSON.stringify(currentUser));
+  updateWhoBar(); showTab('forum');
+});
+
+document.getElementById('loginBtn').addEventListener('click', async ()=>{
+  const username = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value;
+
+  const { data: acc } = await sb.from('accounts').select('*').eq('username', username).maybeSingle();
+  if(!acc || acc.password !== password){ flash('loginMsg', 'Hatalı kullanıcı adı veya şifre.', false); return; }
+  if(acc.is_banned) { flash('loginMsg', 'Bu hesap engellenmiştir!', false); return; }
+  
+  currentUser = { username, isAdmin: !!acc.is_admin };
+  localStorage.setItem('dt_user', JSON.stringify(currentUser));
+  updateWhoBar(); showTab('forum');
+});
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  currentUser = null; localStorage.removeItem('dt_user'); updateWhoBar(); showTab('login');
+});
+
+function updateWhoBar(){
+  const bar = document.getElementById('whoBar');
+  const box = document.getElementById('newForumBox');
+  const note = document.getElementById('lockedForumNote');
+  if(currentUser){
+    bar.classList.remove('hidden');
+    document.getElementById('whoName').textContent = currentUser.username;
+    document.getElementById('whoRole').textContent = currentUser.isAdmin ? 'ADMIN' : 'ÜYE';
+    box.classList.remove('hidden');
+    note.style.display = 'none';
+  } else {
+    bar.classList.add('hidden'); box.classList.add('hidden'); note.style.display = 'block';
+  }
+  if(sb) refreshForum();
+}
+
+connectSupabase();
+</script>
+</body>
+</html>
