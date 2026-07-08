@@ -2,22 +2,22 @@
 <html lang="tr" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<title>Deneyap Kart - Genel Tartışma Forumu</title>
+<title>Deneyap Kart - Teknik Bilgi Platformu</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root[data-theme="dark"] {
     --bg:#0f1220;--panel:#171b2e;--panel2:#1e2340;--border:#2a2f4a;
-    --text:#e8e9f3;--muted:#9096b5;--accent:#6c8bff;--accent2:#8f6cff;
+    --text:#e8e9f3;--muted:#9096b5;--accent:#e67e22;--accent2:#d35400;
     --danger:#ff6c6c;--success:#5fd9a0;
   }
   :root[data-theme="light"] {
     --bg:#f4f5f9;--panel:#ffffff;--panel2:#f0f2f8;--border:#dcdfe6;
-    --text:#1a1d2c;--muted:#727793;--accent:#6c8bff;--accent2:#8f6cff;
+    --text:#1a1d2c;--muted:#727793;--accent:#e67e22;--accent2:#d35400;
     --danger:#e74c3c;--success:#2ecc71;
   }
   *{box-sizing:border-box;transition: background 0.2s, color 0.2s, border-color 0.2s;}
   body{margin:0;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:24px;}
-  .wrap{max-width:800px;margin:0 auto;}
+  .wrap{max-width:850px;margin:0 auto;}
   
   header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;background:var(--panel);padding:15px;border-radius:14px;border:1px solid var(--border);}
   .logo-area{display:flex;align-items:center;gap:15px;}
@@ -37,12 +37,16 @@
   nav{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
   nav button{background:var(--panel);border:1px solid var(--border);color:var(--muted);padding:9px 16px;border-radius:10px;cursor:pointer;font-size:13px;}
   nav button.active{background:var(--panel2);color:var(--text);border-color:var(--accent);}
+  
+  .filter-bar{display:flex;gap:8px;margin-bottom:16px;background:var(--panel);padding:10px;border-radius:10px;border:1px solid var(--border);overflow-x:auto;}
+  .filter-btn{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;white-space:nowrap;}
+  .filter-btn.active{background:var(--accent);color:#fff;border-color:transparent;}
 
   .panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px;}
   .panel h2{margin-top:0;font-size:17px;}
   label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px;}
-  input[type=text],input[type=password],textarea{width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;}
-  textarea{resize:vertical;min-height:90px;}
+  input[type=text],input[type=password],select,textarea{width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;}
+  textarea{resize:vertical;min-height:100px;}
   
   .checkrow{display:flex;align-items:center;gap:8px;margin-top:14px;}
   .checkrow input{width:16px;height:16px;margin:0;}
@@ -55,25 +59,34 @@
   .msg.success{background:rgba(95,217,160,.12);color:var(--success);display:block;}
   .hidden{display:none !important;}
   
-  .forum-post{border:1px solid var(--border);background:var(--panel);border-radius:12px;padding:18px;margin-bottom:16px;position:relative;}
-  .forum-post h3{margin:0 0 8px 0;font-size:16px;}
-  .forum-post p{font-size:14px;color:var(--text);line-height:1.5;margin:0 0 12px 0;white-space:pre-wrap;}
-  .forum-post .meta{font-size:11px;color:var(--muted);display:flex;gap:12px;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:12px;}
+  .post{border:1px solid var(--border);background:var(--panel2);border-radius:10px;padding:16px;margin-bottom:12px;position:relative;}
+  .post-header{cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
+  .post-header h3{margin:0;font-size:16px;color:var(--text);display:flex;align-items:center;gap:8px;}
+  .post-header h3::before{content:"▶";font-size:11px;color:var(--accent);transition:transform 0.2s;}
+  .post.open .post-header h3::before{transform:rotate(90deg);}
   
-  .replies-box{background:var(--panel2);padding:12px;border-radius:8px;border:1px solid var(--border);margin-top:10px;}
-  .replies-box h4{margin:0 0 6px 0;font-size:12px;color:var(--muted);}
-  .reply-item{padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between;align-items:center;}
-  .reply-meta{font-size:10px;color:var(--muted);margin-bottom:2px;}
+  .post .meta{display:flex;gap:10px;font-size:11px;color:var(--muted);align-items:center;}
+  .post .board-tag{background:rgba(230,126,34,0.15);color:var(--accent);padding:2px 6px;border-radius:4px;font-weight:bold;}
   
-  .reply-form{display:flex;gap:6px;margin-top:8px;}
-  .reply-form input{margin:0;padding:6px 10px;font-size:13px;}
+  .post-body{display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:12px;}
+  .post.open .post-body{display:block;}
+  
+  .post pre{background:var(--panel);padding:12px;border-radius:6px;border:1px solid var(--border);overflow-x:auto;font-size:13px;margin:8px 0 0;font-family:monospace;}
+  .post p{margin:0;font-size:14px;line-height:1.5;white-space:pre-wrap;}
 
-  .mod-actions{position:absolute;right:18px;top:18px;display:flex;gap:6px;}
+  .comments-section{margin-top:15px;background:var(--panel);padding:12px;border-radius:8px;border:1px solid var(--border);}
+  .comments-section h4{margin:0 0 8px 0;font-size:13px;color:var(--muted);}
+  .comment-item{border-bottom:1px solid var(--border);padding:6px 0;font-size:13px;display:flex;justify-content:space-between;align-items:center;}
+  .comment-meta{font-size:10px;color:var(--muted);margin-bottom:2px;}
+  .comment-form{display:flex;gap:6px;margin-top:10px;}
+  .comment-form input{margin:0;padding:6px 10px;font-size:13px;}
+  
+  .mod-actions{position:absolute;right:16px;top:12px;display:flex;gap:6px;}
   .mod-btn{background:rgba(255,108,108,0.15);color:var(--danger);border:1px solid var(--danger);padding:4px 8px;border-radius:4px;font-size:11px;cursor:pointer;}
   .ban-btn{background:rgba(241,196,15,0.15);color:#f1c40f;border:1px solid #f1c40f;}
 
   .who{display:flex;justify-content:space-between;align-items:center;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:13px;}
-  .who .role{font-size:11px;padding:2px 8px;border-radius:20px;background:rgba(108,139,255,0.15);color:var(--accent);}
+  .who .role{font-size:11px;padding:2px 8px;border-radius:20px;background:rgba(230,126,34,.15);color:var(--accent);}
   .who button{background:none;border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;}
   .empty{color:var(--muted);font-size:13px;text-align:center;padding:30px 0;}
 </style>
@@ -81,22 +94,20 @@
 <body>
 <div class="wrap">
   <div class="site-switcher">
-    <a href="https://www.deneyapkart.com" class="site-btn passive">📋 www.deneyapkart.com ➔</a>
-    <a href="https://www.deneyapkart.xyz" class="site-btn active">💬 www.deneyapkart.xyz</a>
+    <a href="https://www.deneyapkart.com" class="site-btn active">📚 www.deneyapkart.com</a>
+    <a href="https://eko-ai337.github.io/forum/" class="site-btn passive">💬 www.deneyapkart.xyz ➔</a>
   </div>
 
   <header>
     <div class="logo-area">
-      <svg width="45" height="45" viewBox="0 0 100 100" style="fill:none; stroke:#6c8bff; stroke-width:4;">
+      <svg width="45" height="45" viewBox="0 0 100 100" style="fill:none; stroke:#e67e22; stroke-width:4;">
         <path d="M50 5 L90 20 L90 60 L50 95 L10 60 L10 20 Z" fill="#171b2e"/>
-        <circle cx="35" cy="45" r="4" fill="#6c8bff"/>
-        <circle cx="50" cy="45" r="4" fill="#6c8bff"/>
-        <circle cx="65" cy="45" r="4" fill="#6c8bff"/>
-        <path d="M40 65 L30 75 L45 75" stroke="#6c8bff" stroke-width="3"/>
+        <rect x="38" y="38" width="24" height="24" rx="4" stroke="#e67e22" stroke-width="3"/>
+        <path d="M45 44 L55 44 M45 50 L55 50 M45 56 L52 56" stroke="#e67e22" stroke-width="3" stroke-linecap="round"/>
       </svg>
       <div class="logo-text">
         <h1>DENEYAP KART</h1>
-        <p>GENEL TARTIŞMA FORUMU</p>
+        <p>TEKNİK BİLGİ SİTESİ</p>
       </div>
     </div>
     <div class="controls">
@@ -107,7 +118,7 @@
 
   <div id="appArea" class="hidden">
     <nav id="mainNav">
-      <button data-tab="forum" class="active">💬 Forum Akışı</button>
+      <button data-tab="projeniz" class="active">📚 Bilgi Bankası</button>
       <button data-tab="login">Giriş Yap</button>
       <button data-tab="signup">Kayıt Ol</button>
     </nav>
@@ -147,23 +158,40 @@
       <div class="msg" id="signupMsg"></div>
     </div>
 
-    <div class="panel tab" id="tab-forum">
-      <div id="newForumBox" class="hidden" style="border: 1px dashed var(--accent); padding:15px; border-radius:10px; margin-bottom:20px;">
-        <h2>💬 Yeni Soru / Konu Aç</h2>
-        <label>Konu Başlığı</label>
-        <input type="text" id="forumTitle" placeholder="Örn: Deneyap Kart Bluetooth bağlantı hatası">
-        <label>Mesajınız</label>
-        <textarea id="forumContent" placeholder="Sorunuzu buraya yazın..."></textarea>
-        <button class="btn" id="forumPostBtn">Yayınla</button>
-        <div class="msg" id="forumMsg"></div>
+    <div class="panel tab" id="tab-projeniz">
+      <div id="adminPostBox" class="hidden" style="border: 2px dashed var(--accent); padding:15px; border-radius:10px; margin-bottom:20px;">
+        <h2>⚙️ Yeni Teknik Paylaşım (Sadece Admin)</h2>
+        <label>Proje / Konu Başlığı</label>
+        <input type="text" id="postTitle" placeholder="Örn: Deneyap Kart Bağlantı Şeması">
+        <label>Kategori</label>
+        <select id="postBoard">
+          <option value="Deneyap Kart">Deneyap Kart</option>
+          <option value="Arduino">Arduino</option>
+          <option value="ESP32">ESP32</option>
+          <option value="Diğer">Diğer / Genel</option>
+        </select>
+        <label>Açıklama Detayları</label>
+        <textarea id="postContent" placeholder="Detayları buraya yazın..."></textarea>
+        <label>Kod Blokları (İsteğe Bağlı)</label>
+        <textarea id="postCode" placeholder="// Kodlarınızı buraya yapıştırın..." style="min-height:120px; color:#5fd9a0; font-family: monospace;"></textarea>
+        <button class="btn" id="postBtn">Yayınla</button>
+        <div class="msg" id="postMsg"></div>
       </div>
 
-      <div id="lockedForumNote" class="msg" style="display:block; background:rgba(108,139,255,0.1); color:var(--accent);">
-        ⚠️ Forumda yeni konu açmak veya cevap yazmak için lütfen <strong>giriş yapın</strong>.
+      <div id="lockedNote" class="msg" style="display:block;background:rgba(230,126,34,.1);color:var(--accent);">
+        ⚠️ Bu sitede sadece <strong>Adminler</strong> teknik paylaşım yapabilir. Üyeler içeriklere yorum yazabilir.
       </div>
 
-      <h2>💬 Güncel Tartışmalar</h2>
-      <div id="forumList"></div>
+      <h2>📚 Paylaşılan Teknik Bilgiler</h2>
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="Tümü">Tümü</button>
+        <button class="filter-btn" data-filter="Deneyap Kart">Deneyap Kart</button>
+        <button class="filter-btn" data-filter="Arduino">Arduino</button>
+        <button class="filter-btn" data-filter="ESP32">ESP32</button>
+        <button class="filter-btn" data-filter="Diğer">Diğer</button>
+      </div>
+
+      <div id="postsList"></div>
     </div>
   </div>
 </div>
@@ -174,6 +202,8 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 let sb = null;
 let currentUser = null;
+let currentFilter = "Tümü";
+let openProjectIds = new Set(); 
 
 const savedUser = localStorage.getItem('dt_user');
 if(savedUser) { currentUser = JSON.parse(savedUser); }
@@ -208,63 +238,91 @@ async function connectSupabase(){
     document.getElementById('appArea').classList.remove('hidden');
     updateWhoBar();
 
-    sb.channel('public:forum_and_replies')
-      .on('postgres_changes', { event: '*', pattern: 'public', table: 'posts' }, async () => { await refreshForum(); })
-      .on('postgres_changes', { event: '*', pattern: 'public', table: 'comments' }, async () => { await refreshForum(); })
+    sb.channel('public:projects_and_comments')
+      .on('postgres_changes', { event: '*', pattern: 'public', table: 'projects' }, async () => { await refreshPosts(); })
+      .on('postgres_changes', { event: '*', pattern: 'public', table: 'comments' }, async () => { await refreshPosts(); })
       .subscribe();
 
   }catch(e){ document.getElementById('statusTag').textContent = 'hata'; }
 }
 
-async function refreshForum(){
-  let { data: posts } = await sb.from('posts').select('*').order('created_at', {ascending:false});
-  let { data: replies } = await sb.from('comments').select('*').order('created_at', {ascending:true});
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', async (e) => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    currentFilter = e.target.dataset.filter;
+    await refreshPosts();
+  });
+});
+
+function toggleProjectView(id) {
+  const postEl = document.getElementById(`project-card-${id}`);
+  if(openProjectIds.has(id)) {
+    openProjectIds.delete(id); postEl.classList.remove('open');
+  } else {
+    openProjectIds.add(id); postEl.classList.add('open');
+  }
+}
+
+async function refreshPosts(){
+  let { data: projects } = await sb.from('projects').select('*').order('created_at', {ascending:false});
+  let { data: comments } = await sb.from('comments').select('*').order('created_at', {ascending:true});
   
-  const list = document.getElementById('forumList');
-  if(!posts) { list.innerHTML = '<div class="empty">Yüklenemedi.</div>'; return; }
-  if(posts.length === 0){ list.innerHTML = '<div class="empty">Henüz hiç konu açılmamış.</div>'; return; }
+  const list = document.getElementById('postsList');
+  if(!projects) { list.innerHTML = '<div class="empty">Yüklenemedi.</div>'; return; }
+  
+  if(currentFilter !== "Tümü") { projects = projects.filter(p => p.board === currentFilter); }
+  if(projects.length === 0){ list.innerHTML = '<div class="empty">Bu kategoride içerik bulunamadı.</div>'; return; }
 
   const isAdmin = currentUser && currentUser.isAdmin;
 
-  list.innerHTML = posts.map(p => {
-    const postReplies = replies ? replies.filter(r => String(r.post_id) === String(p.id)) : [];
+  list.innerHTML = projects.map(p => {
+    const isOpen = openProjectIds.has(String(p.id)) || openProjectIds.has(Number(p.id));
+    const postComments = comments ? comments.filter(c => String(c.post_id) === String(p.id)) : [];
 
     return `
-      <div class="forum-post">
-        <h3>${escapeHtml(p.title)}</h3>
-        <div class="meta">
-          <span>👤 Paylaşan: <strong>${escapeHtml(p.author)}</strong></span>
-          <span>📅 ${new Date(p.created_at).toLocaleDateString('tr-TR')}</span>
-        </div>
-        <p>${escapeHtml(p.content)}</p>
-        
-        <div class="replies-box">
-          <h4>💬 Cevaplar (${postReplies.length})</h4>
-          <div>
-            ${postReplies.length === 0 ? '<p style="font-size:12px; color:var(--muted); margin:0;">Henüz cevap yok.</p>':''}
-            ${postReplies.map(r => `
-              <div class="reply-item">
-                <div>
-                  <div class="reply-meta"><strong>${escapeHtml(r.author)}</strong> · ${new Date(r.created_at).toLocaleString('tr-TR')}</div>
-                  <div>${escapeHtml(r.content)}</div>
-                </div>
-                ${isAdmin && r.author !== currentUser.username ? `<button class="mod-btn ban-btn" onclick="banUser('${r.author}')">🚫 Banla</button>` : ''}
-              </div>
-            `).join('')}
+      <div class="post ${isOpen ? 'open' : ''}" id="project-card-${p.id}">
+        <div class="post-header" onclick="toggleProjectView('${p.id}')">
+          <h3>${escapeHtml(p.title)} <span style="font-size:12px; color:var(--muted)">(${postComments.length} Yorum)</span></h3>
+          <div class="meta" style="padding-right: ${isAdmin ? '140px':'0px'}">
+            <span class="board-tag">${escapeHtml(p.board || "Genel")}</span>
+            <span>📅 ${new Date(p.created_at).toLocaleDateString('tr-TR')}</span>
           </div>
+        </div>
+        
+        <div class="post-body">
+          <div style="font-size:11px; color:var(--muted); margin-bottom:8px;">👤 Paylaşan: ${escapeHtml(p.author)}</div>
+          <p>${escapeHtml(p.content)}</p>
+          ${p.code ? `<pre><code>${escapeHtml(p.code)}</code></pre>` : ''}
           
-          ${currentUser ? `
-            <div class="reply-form">
-              <input type="text" id="reply-in-${p.id}" placeholder="Bir cevap yazın...">
-              <button class="btn" style="padding:6px 12px; font-size:12px; margin:0;" onclick="addReply('${p.id}')">Gönder</button>
+          <div class="comments-section">
+            <h4>💬 Yorumlar</h4>
+            <div id="comments-list-${p.id}">
+              ${postComments.length === 0 ? '<p style="font-size:12px; color:var(--muted); margin:0;">Henüz yorum yok.</p>':''}
+              ${postComments.map(c => `
+                <div class="comment-item">
+                  <div>
+                    <div class="comment-meta"><strong>${escapeHtml(c.author)}</strong> · ${new Date(c.created_at).toLocaleString('tr-TR')}</div>
+                    <div>${escapeHtml(c.content)}</div>
+                  </div>
+                  ${isAdmin && c.author !== currentUser.username ? `<button class="mod-btn ban-btn" onclick="banUser('${c.author}')">🚫 Banla</button>` : ''}
+                </div>
+              `).join('')}
             </div>
-          ` : ''}
+            
+            ${currentUser ? `
+              <div class="comment-form">
+                <input type="text" id="comment-in-${p.id}" placeholder="Bir cevap yazın...">
+                <button class="btn" style="padding:6px 12px; font-size:12px; margin:0;" onclick="addComment('${p.id}')">Gönder</button>
+              </div>
+            ` : ''}
+          </div>
         </div>
 
         ${isAdmin ? `
           <div class="mod-actions">
             ${p.author !== currentUser.username ? `<button class="mod-btn ban-btn" onclick="banUser('${p.author}')">🚫 Banla</button>` : ''}
-            <button class="mod-btn" onclick="deleteForumPost('${p.id}')">🗑️ Sil</button>
+            <button class="mod-btn" onclick="deleteProject('${p.id}')">🗑️ Sil</button>
           </div>
         ` : ''}
       </div>
@@ -276,16 +334,16 @@ async function banUser(username) {
   if(!currentUser || !currentUser.isAdmin) return;
   if(confirm(`${username} isimli kullanıcıyı tamamen banlamak istiyor musunuz?`)) {
     const { error } = await sb.from('accounts').update({ is_banned: true }).eq('username', username);
-    if(!error) { alert(`${username} engellendi.`); await refreshForum(); }
+    if(!error) { alert(`${username} başarıyla engellendi.`); await refreshPosts(); }
   }
 }
 
-async function addReply(postId) {
+async function addComment(postId) {
   if(!currentUser) return;
   const { data: userCheck } = await sb.from('accounts').select('is_banned').eq('username', currentUser.username).maybeSingle();
-  if(userCheck && userCheck.is_banned) { alert('Hesabınız engellendiği için cevap yazamazsınız.'); return; }
+  if(userCheck && userCheck.is_banned) { alert('Hesabınız engellendiği için yorum yapamazsınız.'); return; }
 
-  const input = document.getElementById(`reply-in-${postId}`);
+  const input = document.getElementById(`comment-in-${postId}`);
   const content = input.value.trim();
   if(!content) return;
 
@@ -293,27 +351,28 @@ async function addReply(postId) {
   input.value = '';
 }
 
-async function deleteForumPost(id) {
+async function deleteProject(id) {
   if(!currentUser || !currentUser.isAdmin) return;
-  if(confirm('Bu konuyu silmek istiyor musunuz?')) {
+  if(confirm('Silmek istediğinize emin misiniz?')) {
     const queryId = isNaN(id) ? id : Number(id);
-    await sb.from('posts').delete().eq('id', queryId);
+    await sb.from('projects').delete().eq('id', queryId);
     await sb.from('comments').delete().eq('post_id', queryId);
   }
 }
 
-document.getElementById('forumPostBtn').addEventListener('click', async ()=>{
-  if(!currentUser) return;
-  const { data: userCheck } = await sb.from('accounts').select('is_banned').eq('username', currentUser.username).maybeSingle();
-  if(userCheck && userCheck.is_banned) { alert('Hesabınız engellendiği için konu açamazsınız.'); return; }
+document.getElementById('postBtn').addEventListener('click', async ()=>{
+  if(!currentUser || !currentUser.isAdmin) return;
+  const title = document.getElementById('postTitle').value.trim();
+  const content = document.getElementById('postContent').value.trim();
+  const code = document.getElementById('postCode').value.trim();
+  const board = document.getElementById('postBoard').value;
 
-  const title = document.getElementById('forumTitle').value.trim();
-  const content = document.getElementById('forumContent').value.trim();
   if(!title || !content) return;
 
-  await sb.from('posts').insert({ title, content, author: currentUser.username });
-  document.getElementById('forumTitle').value = '';
-  document.getElementById('forumContent').value = '';
+  await sb.from('projects').insert({ title, content, code: code || null, board, author: currentUser.username });
+  document.getElementById('postTitle').value = '';
+  document.getElementById('postContent').value = '';
+  document.getElementById('postCode').value = '';
 });
 
 document.getElementById('signupBtn').addEventListener('click', async ()=>{
@@ -340,9 +399,9 @@ document.getElementById('signupBtn').addEventListener('click', async ()=>{
   }
 
   await sb.from('accounts').insert({ username, password, is_admin: makeAdmin });
-  currentUser = { username, makeAdmin };
+  currentUser = { username, isAdmin: makeAdmin };
   localStorage.setItem('dt_user', JSON.stringify(currentUser));
-  updateWhoBar(); showTab('forum');
+  updateWhoBar(); showTab('projeniz');
 });
 
 document.getElementById('loginBtn').addEventListener('click', async ()=>{
@@ -355,7 +414,7 @@ document.getElementById('loginBtn').addEventListener('click', async ()=>{
   
   currentUser = { username, isAdmin: !!acc.is_admin };
   localStorage.setItem('dt_user', JSON.stringify(currentUser));
-  updateWhoBar(); showTab('forum');
+  updateWhoBar(); showTab('projeniz');
 });
 
 document.getElementById('logoutBtn').addEventListener('click', () => {
@@ -364,18 +423,18 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
 
 function updateWhoBar(){
   const bar = document.getElementById('whoBar');
-  const box = document.getElementById('newForumBox');
-  const note = document.getElementById('lockedForumNote');
+  const box = document.getElementById('adminPostBox');
+  const note = document.getElementById('lockedNote');
   if(currentUser){
     bar.classList.remove('hidden');
     document.getElementById('whoName').textContent = currentUser.username;
     document.getElementById('whoRole').textContent = currentUser.isAdmin ? 'ADMIN' : 'ÜYE';
-    box.classList.remove('hidden');
-    note.style.display = 'none';
+    if(currentUser.isAdmin){ box.classList.remove('hidden'); note.style.display = 'none'; } 
+    else { box.classList.add('hidden'); note.style.display = 'block'; }
   } else {
     bar.classList.add('hidden'); box.classList.add('hidden'); note.style.display = 'block';
   }
-  if(sb) refreshForum();
+  if(sb) refreshPosts();
 }
 
 connectSupabase();
